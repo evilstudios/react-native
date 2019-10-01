@@ -350,7 +350,7 @@ void RCTProfileUnhookModules(RCTBridge *bridge)
   if ([bridge moduleIsInitialized:[RCTUIManager class]]) {
     dispatch_async(dispatch_get_main_queue(), ^{
       for (id view in [bridge.uiManager valueForKey:@"viewRegistry"]) {
-        RCTProfileUnhookInstance(view);
+        RCTProfileUnhookInstance([bridge.uiManager viewForReactTag:view]);
       }
 
       dispatch_group_leave(RCTProfileGetUnhookGroup());
@@ -372,7 +372,7 @@ void RCTProfileUnhookModules(RCTBridge *bridge)
 
 + (void)reload
 {
-  [RCTProfilingBridge() reload];
+  [RCTProfilingBridge() reloadWithReason:@"Profiling controls"];
 }
 
 + (void)toggle:(UIButton *)target

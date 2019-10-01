@@ -49,7 +49,7 @@ RCT_EXTERN NSString *const RCTJavaScriptDidFailToLoadNotification;
 RCT_EXTERN NSString *const RCTDidInitializeModuleNotification;
 
 /**
- * This notification fires each time a native module is setup after it is initialized. The
+ * This notification fires each time a module is setup after it is initialized. The
  * `RCTDidSetupModuleNotificationModuleNameKey` key will contain a reference to the module name and
  * `RCTDidSetupModuleNotificationSetupTimeKey` will contain the setup time in ms.
  */
@@ -74,6 +74,11 @@ RCT_EXTERN NSString *const RCTDidSetupModuleNotificationSetupTimeKey;
 RCT_EXTERN NSString *const RCTBridgeWillReloadNotification;
 
 /**
+ * This notification fires whenever a fast refresh happens.
+ */
+RCT_EXTERN NSString *const RCTBridgeFastRefreshNotification;
+
+/**
  * This notification fires just before the bridge begins downloading a script
  * from the packager.
  */
@@ -86,10 +91,28 @@ RCT_EXTERN NSString *const RCTBridgeWillDownloadScriptNotification;
 RCT_EXTERN NSString *const RCTBridgeDidDownloadScriptNotification;
 
 /**
+ * This notification fires right after the bridge is about to invalidate NativeModule
+ * instances during teardown. Handle this notification to perform additional invalidation.
+ */
+RCT_EXTERN NSString *const RCTBridgeWillInvalidateModulesNotification;
+
+/**
+ * This notification fires right after the bridge finishes invalidating NativeModule
+ * instances during teardown. Handle this notification to perform additional invalidation.
+ */
+RCT_EXTERN NSString *const RCTBridgeDidInvalidateModulesNotification;
+
+/**
  * Key for the RCTSource object in the RCTBridgeDidDownloadScriptNotification
  * userInfo dictionary.
  */
 RCT_EXTERN NSString *const RCTBridgeDidDownloadScriptNotificationSourceKey;
+
+
+/**
+ * Key for the reload reason in the RCTBridgeWillReloadNotification userInfo dictionary.
+ */
+RCT_EXTERN NSString *const RCTBridgeDidDownloadScriptNotificationReasonKey;
 
 /**
  * Key for the bridge description (NSString_ in the
@@ -100,7 +123,7 @@ RCT_EXTERN NSString *const RCTBridgeDidDownloadScriptNotificationBridgeDescripti
 /**
  * This block can be used to instantiate modules that require additional
  * init parameters, or additional configuration prior to being used.
- * The bridge will call this block to instatiate the modules, and will
+ * The bridge will call this block to instantiate the modules, and will
  * be responsible for invalidating/releasing them when the bridge is destroyed.
  * For this reason, the block should always return new module instances, and
  * module instances should not be shared between bridges.
@@ -168,7 +191,7 @@ RCT_EXTERN void RCTEnableTurboModule(BOOL enabled);
 /**
  * Retrieve a bridge module instance by name or class. Note that modules are
  * lazily instantiated, so calling these methods for the first time with a given
- * module name/class may cause the class to be sychronously instantiated,
+ * module name/class may cause the class to be synchronously instantiated,
  * potentially blocking both the calling thread and main thread for a short time.
  *
  * Note: This method does NOT lazily load the particular module if it's not yet loaded.
@@ -186,7 +209,7 @@ RCT_EXTERN void RCTEnableTurboModule(BOOL enabled);
 
 /**
  * Convenience method for retrieving all modules conforming to a given protocol.
- * Modules will be sychronously instantiated if they haven't already been,
+ * Modules will be synchronously instantiated if they haven't already been,
  * potentially blocking both the calling thread and main thread for a short time.
  */
 - (NSArray *)modulesConformingToProtocol:(Protocol *)protocol;
@@ -242,12 +265,22 @@ RCT_EXTERN void RCTEnableTurboModule(BOOL enabled);
 /**
  * Reload the bundle and reset executor & modules. Safe to call from any thread.
  */
-- (void)reload;
+- (void)reload __deprecated_msg("Call reloadWithReason instead");
+
+/**
+ * Reload the bundle and reset executor & modules. Safe to call from any thread.
+ */
+- (void)reloadWithReason:(NSString *)reason;
+
+/**
+ * Handle notifications for a fast refresh. Safe to call from any thread.
+ */
+- (void)onFastRefresh;
 
 /**
  * Inform the bridge, and anything subscribing to it, that it should reload.
  */
-- (void)requestReload __deprecated_msg("Call reload instead");
+- (void)requestReload __deprecated_msg("Call reloadWithReason instead");
 
 /**
  * Says whether bridge has started receiving calls from javascript.

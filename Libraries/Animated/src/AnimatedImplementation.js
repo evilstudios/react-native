@@ -403,7 +403,12 @@ const parallel = function(
 
 const delay = function(time: number): CompositeAnimation {
   // Would be nice to make a specialized implementation
-  return timing(new AnimatedValue(0), {toValue: 0, delay: time, duration: 0});
+  return timing(new AnimatedValue(0), {
+    toValue: 0,
+    delay: time,
+    duration: 0,
+    useNativeDriver: false,
+  });
 };
 
 const stagger = function(
@@ -503,7 +508,7 @@ function unforkEvent(
   }
 }
 
-const event = function(argMapping: Array<?Mapping>, config?: EventConfig): any {
+const event = function(argMapping: Array<?Mapping>, config: EventConfig): any {
   const animatedEvent = new AnimatedEvent(argMapping, config);
   if (animatedEvent.__isNative) {
     return animatedEvent;

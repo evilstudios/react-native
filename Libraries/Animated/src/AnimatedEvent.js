@@ -11,22 +11,23 @@
 
 const AnimatedValue = require('./nodes/AnimatedValue');
 const NativeAnimatedHelper = require('./NativeAnimatedHelper');
-const ReactNative = require('ReactNative');
+const ReactNative = require('../../Renderer/shims/ReactNative');
 
 const invariant = require('invariant');
+
 const {shouldUseNativeDriver} = require('./NativeAnimatedHelper');
 
 export type Mapping = {[key: string]: Mapping} | AnimatedValue;
 export type EventConfig = {
   listener?: ?Function,
-  useNativeDriver?: boolean,
+  useNativeDriver: boolean,
 };
 
 function attachNativeEvent(
   viewRef: any,
   eventName: string,
   argMapping: Array<?Mapping>,
-) {
+): {|detach: () => void|} {
   // Find animated values in `argMapping` and create an array representing their
   // key path inside the `nativeEvent` object. Ex.: ['contentOffset', 'x'].
   const eventMappings = [];
@@ -86,8 +87,14 @@ class AnimatedEvent {
   };
   __isNative: boolean;
 
-  constructor(argMapping: Array<?Mapping>, config?: EventConfig = {}) {
+  constructor(argMapping: Array<?Mapping>, config: EventConfig) {
     this._argMapping = argMapping;
+
+    if (config == null) {
+      console.warn('Animated.event now requires a second argument for options');
+      config = {};
+    }
+
     if (config.listener) {
       this.__addListener(config.listener);
     }
@@ -130,7 +137,7 @@ class AnimatedEvent {
     this._attachedEvent && this._attachedEvent.detach();
   }
 
-  __getHandler() {
+  __getHandler(): any | ((...args: any) => void) {
     if (this.__isNative) {
       return this._callListeners;
     }
